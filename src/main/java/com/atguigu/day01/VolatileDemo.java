@@ -1,5 +1,7 @@
 package com.atguigu.day01;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * @BelongsProject: interview2
  * @BelongsPackage: com.atguigu.day01
@@ -14,6 +16,10 @@ package com.atguigu.day01;
  * 2.1 原子性指的是什么
  *      不可分割，完整性，也即某个线程正在做某个具体业务时，中间不可以被加塞或者被分割，需要整体完整要么同时成功，要么同时失败
  * 2.2 volatile 不保证原子性的案例演示
+ * 2.3 why
+ * 2.4 如何解决原子性
+ *      * 加synchronized
+ *      * 使用juc下面的AtomicInteger
  */
 public class VolatileDemo {
 
@@ -23,6 +29,7 @@ public class VolatileDemo {
             new Thread(() -> {
                 for (int j = 0; j < 1000; j++) {
                     myData.addPlusPlus();
+                    myData.addMyAtomic();
                 }
             }, String.valueOf(i)).start();
         }
@@ -30,7 +37,8 @@ public class VolatileDemo {
         while (Thread.activeCount() > 2) {
             Thread.yield();
         }
-        System.out.println(Thread.currentThread().getName() + "\t finally number value：" + myData.number);
+        System.out.println(Thread.currentThread().getName() + "\t int type, finally number value：" + myData.number);
+        System.out.println(Thread.currentThread().getName() + "\t AtomicInteger type, finally number value：" + myData.atomicInteger);
     }
 
     // volatile 可以保证可见性，及时通知其它线程，主物理内存的值已经被修改
@@ -59,12 +67,18 @@ public class VolatileDemo {
 class MyData {
     volatile int number = 0;
 
-    public void addNumTo60() {
+    public synchronized void addNumTo60() {
         this.number = 60;
     }
 
     // 注意：此时number前面是加了volatile关键字修饰的，volatile不保证原子性
     public void addPlusPlus() {
         this.number++;
+    }
+
+    AtomicInteger atomicInteger = new AtomicInteger();
+
+    public void addMyAtomic() {
+        atomicInteger.getAndIncrement();
     }
 }
